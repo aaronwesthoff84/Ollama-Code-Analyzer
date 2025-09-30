@@ -15,3 +15,5 @@ This document outlines the planned features and improvements for the Gemini Code
     -   Update the placeholder example for Dockerfiles.
     -   Register Dockerfile with highlight.js for proper syntax highlighting.
     -   Update the language auto-detection logic to include Dockerfile.
+
+3. **add the ability to clear the code**

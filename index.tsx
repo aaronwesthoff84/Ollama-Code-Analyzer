@@ -47,7 +47,7 @@ async function handleCodeExecution(
   if (!code.trim()) {
     renderCard(
       'Input Error',
-      `Please enter some ${language} code to execute.`,
+      `Please enter some ${language} content to process.`,
       resultsContainer,
       { type: 'error' },
     );
@@ -64,14 +64,43 @@ async function handleCodeExecution(
     // 4. Clear Spinner
     resultsContainer.innerHTML = '';
 
-    // 5. Render Submitted Code & Tests
-    const submittedCodeMarkdown = '```' + language + '\n' + code + '\n```';
-    renderCard('Submitted Code', submittedCodeMarkdown, resultsContainer, {
-      showCopyButton: true,
-      rawContent: code,
-      language,
-    });
+    // 5. Render Submitted Content
+    const submittedContentMarkdown = '```' + language + '\n' + code + '\n```';
+    renderCard(
+      `Submitted ${language === 'markdown' ? 'Markdown' : 'Code'}`,
+      submittedContentMarkdown,
+      resultsContainer,
+      {
+        showCopyButton: true,
+        rawContent: code,
+        language,
+      },
+    );
 
+    // 6. Handle Markdown Review
+    if (language === 'markdown') {
+      if (result.suggestion) {
+        renderCard(
+          'Review & Suggestions',
+          '```markdown\n' + result.suggestion + '\n```',
+          resultsContainer,
+          {
+            showCopyButton: true,
+            rawContent: result.suggestion,
+            language: 'markdown',
+          },
+        );
+      } else {
+        renderCard(
+          'Model Response',
+          'The model did not provide any suggestions.',
+          resultsContainer,
+        );
+      }
+      return; // End here for markdown
+    }
+
+    // 7. Render Code Execution Results
     if (tests.trim()) {
       const submittedTestsMarkdown = '```' + language + '\n' + tests + '\n```';
       renderCard('Submitted Tests', submittedTestsMarkdown, resultsContainer, {
@@ -81,7 +110,6 @@ async function handleCodeExecution(
       });
     }
 
-    // 6. Render Result Cards
     let hasOutput = false;
     if (result.testResults) {
       hasOutput = true;
@@ -164,6 +192,7 @@ function main() {
       'FROM python:3.9-slim\nWORKDIR /app\nCOPY . .\nCMD ["python", "app.py"]',
     yaml: 'apiVersion: v1\nkind: Pod\nmetadata:\n  name: my-pod',
     shell: 'echo "Hello from a shell script!"',
+    markdown: '# My Document\n\nStart writing your markdown here.',
   };
   const testPlaceholders: Record<string, string> = {
     python: `# Example using standard assert\ndef test_my_function():\n    assert my_function(2) == 4`,
@@ -171,6 +200,7 @@ function main() {
     dockerfile: `# Example: check if a specific port is exposed\nRUN grep "EXPOSE 8080" Dockerfile`,
     yaml: `# Example: check for a required key using a shell command\nyaml_lint my_file.yaml || exit 1`,
     shell: `# Example: test if a command succeeds\nif my_script.sh --version; then\n  echo "PASS: version command successful"\nelse\n  echo "FAIL: version command failed"\nfi`,
+    markdown: '',
   };
 
   if (
@@ -189,6 +219,19 @@ function main() {
       const selectedLanguage = languageSelect.value;
       codeInput.placeholder = placeholders[selectedLanguage];
       testInput.placeholder = testPlaceholders[selectedLanguage];
+
+      if (selectedLanguage === 'markdown') {
+        executeBtn.textContent = 'Review Markdown';
+        toggleTestsBtn.style.display = 'none';
+        testInputContainer.style.display = 'none';
+        testInput.value = '';
+      } else {
+        executeBtn.textContent = 'Execute Code';
+        toggleTestsBtn.style.display = 'inline-block';
+        if (toggleTestsBtn.textContent === 'Remove Tests') {
+          testInputContainer.style.display = 'block';
+        }
+      }
     };
 
     const handleAutoDetect = () => {
@@ -200,6 +243,7 @@ function main() {
         'dockerfile',
         'yaml',
         'shell',
+        'markdown',
       ]);
       if (
         result.language &&
@@ -276,15 +320,15 @@ function main() {
         codeInput.value = savedState.code || '';
         testInput.value = savedState.tests || '';
         languageSelect.value = savedState.language || 'python';
-        handleLanguageChange(); // Update placeholders
 
-        if (savedState.testsVisible) {
+        if (savedState.testsVisible && savedState.language !== 'markdown') {
           testInputContainer.style.display = 'block';
           toggleTestsBtn.textContent = 'Remove Tests';
         } else {
           testInputContainer.style.display = 'none';
           toggleTestsBtn.textContent = 'Add Tests';
         }
+        handleLanguageChange(); // Update UI based on loaded language
       } else {
         alert('No saved code found.');
       }
@@ -293,7 +337,7 @@ function main() {
     saveBtn.addEventListener('click', handleSaveCode);
     loadBtn.addEventListener('click', handleLoadCode);
 
-    // Set initial placeholders
+    // Set initial placeholders and UI state
     handleLanguageChange();
 
     // Set initial state for load button

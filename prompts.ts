@@ -21,17 +21,18 @@ export function createCodeFormattingPrompt(
       dockerfile: 'standard best practices',
       yaml: 'standard YAML style',
       shell: 'Google Shell Style Guide',
+      markdown: 'Prettier with consistent formatting',
     }[language] || 'standard style conventions';
 
   return `
-Please format the following ${language} code according to the ${styleGuide}.
+Please format the following ${language} content according to ${styleGuide}.
 
 **Instructions:**
-1.  Do not change the logic or functionality of the code.
-2.  Only apply formatting changes (e.g., indentation, spacing, line breaks).
-3.  Return **only** the formatted code inside a single markdown code block. Do not include any explanations or other text outside the code block.
+1.  Do not change the logic, functionality, or meaning of the content.
+2.  Only apply formatting changes (e.g., indentation, spacing, line breaks, list markers).
+3.  Return **only** the formatted content inside a single markdown code block. Do not include any explanations or other text outside the code block.
 
-**Code to Format:**
+**Content to Format:**
 \`\`\`${language}
 ${code}
 \`\`\`
@@ -50,6 +51,22 @@ export function createCodeExecutionAndReviewPrompt(
   code: string,
   tests?: string,
 ): string {
+  if (language === 'markdown') {
+    return `
+Review the following Markdown document.
+
+**Instructions:**
+1.  **Analyze the content:** Check for clarity, grammar, and spelling errors.
+2.  **Review formatting:** Check for consistent and correct Markdown syntax (e.g., headings, lists, links, code blocks).
+3.  **Provide feedback and suggestions:** Summarize your findings and provide a revised version of the document inside a single markdown code block that incorporates your suggestions. If no changes are needed, state that the document looks good.
+
+**Markdown to Review:**
+\`\`\`markdown
+${code}
+\`\`\`
+`;
+  }
+
   let prompt = `
 Analyze and execute the following ${language} code.
 

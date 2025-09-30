@@ -82,6 +82,20 @@ export async function runCode(
   const model = 'gemini-2.5-flash';
   const prompt = createCodeExecutionAndReviewPrompt(language, code, tests);
 
+  if (language === 'markdown') {
+    const response = await ai.models.generateContent({
+      model,
+      contents: prompt,
+    });
+    const text = response.text;
+    const codeBlockRegex = /```markdown\n([\s\S]*?)\n```/;
+    const match = text.match(codeBlockRegex);
+    if (match && match[1]) {
+      return { suggestion: match[1].trim() };
+    }
+    return { suggestion: text.trim() };
+  }
+
   const response = await ai.models.generateContent({
     model,
     contents: prompt,
@@ -97,8 +111,6 @@ export async function runCode(
     for (const part of response.candidates[0].content.parts) {
       if (part.codeExecutionResult) {
         const { outcome, output } = part.codeExecutionResult;
-        // FIX: Property 'OUTCOME_ERROR' does not exist on type 'Outcome'.
-        // Instead, check for the success case and treat all other outcomes as an error.
         if (outcome !== Outcome.OUTCOME_OK) {
           result.stderr = output;
         } else {

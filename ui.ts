@@ -11,6 +11,7 @@ import javascript from 'highlight.js/lib/languages/javascript';
 import dockerfile from 'highlight.js/lib/languages/dockerfile';
 import yaml from 'highlight.js/lib/languages/yaml';
 import shell from 'highlight.js/lib/languages/shell';
+import markdown from 'highlight.js/lib/languages/markdown';
 
 // Setup syntax highlighting
 hljs.registerLanguage('python', python);
@@ -18,6 +19,7 @@ hljs.registerLanguage('javascript', javascript);
 hljs.registerLanguage('dockerfile', dockerfile);
 hljs.registerLanguage('yaml', yaml);
 hljs.registerLanguage('shell', shell);
+hljs.registerLanguage('markdown', markdown);
 
 const renderer = new marked.Renderer();
 renderer.code = ({ text: code, lang }) => {
