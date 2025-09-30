@@ -5,7 +5,10 @@
  */
 
 import { GoogleGenAI, Outcome } from '@google/genai';
-import { createCodeExecutionAndReviewPrompt } from './prompts';
+import {
+  createCodeExecutionAndReviewPrompt,
+  createCodeFormattingPrompt,
+} from './prompts';
 
 const API_KEY = process.env.API_KEY;
 
@@ -23,6 +26,45 @@ export interface GeminiResponse {
   stderr?: string;
   suggestion?: string;
   testResults?: string;
+}
+
+/**
+ * Formats the user's code using the Gemini API.
+ * @param code The code to format.
+ * @param language The language of the code.
+ * @returns A promise that resolves to the formatted code string.
+ */
+export async function formatCode(
+  code: string,
+  language: string,
+): Promise<string> {
+  const model = 'gemini-2.5-flash';
+  const prompt = createCodeFormattingPrompt(language, code);
+
+  const response = await ai.models.generateContent({
+    model,
+    contents: prompt,
+  });
+
+  const text = response.text;
+  if (!text) {
+    throw new Error('The model did not return any content.');
+  }
+
+  // Regex to extract code from a markdown block, tolerating missing language hint
+  const codeBlockRegex = new RegExp('```(?:' + language + ')?\\n([\\s\\S]*?)\\n```');
+  const match = text.match(codeBlockRegex);
+
+  if (match && match[1]) {
+    return match[1];
+  }
+
+  // Fallback if no markdown block is found, return the whole response trimmed.
+  if (text.trim()) {
+    return text.trim();
+  }
+
+  throw new Error("Could not extract formatted code from the model's response.");
 }
 
 /**

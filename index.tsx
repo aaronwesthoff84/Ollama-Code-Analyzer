@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { runCode } from './gemini';
+import { formatCode, runCode } from './gemini';
 import { renderCard, renderSpinner } from './ui';
 import hljs from 'highlight.js/lib/core';
 
@@ -140,15 +140,20 @@ async function handleCodeExecution(
  * Main application entry point.
  */
 function main() {
-  const executeBtn = document.getElementById('execute-btn');
+  const executeBtn = document.getElementById(
+    'execute-btn',
+  ) as HTMLButtonElement;
   const resultsContainer = document.getElementById('results');
   const languageSelect = document.getElementById(
     'language-select',
   ) as HTMLSelectElement;
-  const toggleTestsBtn = document.getElementById('toggle-tests-btn');
+  const toggleTestsBtn = document.getElementById(
+    'toggle-tests-btn',
+  ) as HTMLButtonElement;
   const testInputContainer = document.getElementById('test-input-container');
   const codeInput = document.getElementById('code-input') as HTMLTextAreaElement;
   const testInput = document.getElementById('test-input') as HTMLTextAreaElement;
+  const formatBtn = document.getElementById('format-btn') as HTMLButtonElement;
 
   const placeholders: Record<string, string> = {
     python: "print('Hello, Gemini!')",
@@ -173,7 +178,8 @@ function main() {
     toggleTestsBtn &&
     testInputContainer &&
     codeInput &&
-    testInput
+    testInput &&
+    formatBtn
   ) {
     const handleLanguageChange = () => {
       const selectedLanguage = languageSelect.value;
@@ -223,6 +229,26 @@ function main() {
         testInputContainer.style.display === 'none' ? '' : testInput.value;
       handleCodeExecution(code, languageSelect.value, tests, resultsContainer);
     });
+
+    const handleCodeFormatting = async () => {
+      const code = codeInput.value;
+      if (!code.trim()) return; // Don't format empty code
+
+      formatBtn.textContent = 'Formatting...';
+      formatBtn.disabled = true;
+      try {
+        const formattedCode = await formatCode(code, languageSelect.value);
+        codeInput.value = formattedCode;
+      } catch (e) {
+        console.error('Formatting failed:', e);
+        alert(`Code formatting failed: ${(e as Error).message}`);
+      } finally {
+        formatBtn.textContent = 'Format Code';
+        formatBtn.disabled = false;
+      }
+    };
+
+    formatBtn.addEventListener('click', handleCodeFormatting);
 
     // Set initial placeholders
     handleLanguageChange();
