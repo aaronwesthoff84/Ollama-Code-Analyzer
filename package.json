@@ -1,0 +1,17 @@
+{
+  "name": "gemini-code-reviewer",
+  "version": "1.0.0",
+  "description": "A web app to execute and review code using the Gemini API.",
+  "main": "public/js/main.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "serve public",
+    "dev": "tsc --watch"
+  },
+  "author": "",
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "serve": "^14.2.3",
+    "typescript": "^5.4.5"
+  }
+}

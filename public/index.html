@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gemini Code Execution</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+    <link rel="stylesheet" href="assets/styles.css">
+    <script type="importmap">
+{
+  "imports": {
+    "@google/genai": "https://esm.sh/@google/genai@^0.8.0",
+    "marked": "https://esm.sh/marked@^15.0.8",
+    "highlight.js/lib/core": "https://esm.sh/highlight.js@11.9.0/lib/core",
+    "highlight.js/lib/languages/python": "https://esm.sh/highlight.js@11.9.0/lib/languages/python",
+    "highlight.js/lib/languages/javascript": "https://esm.sh/highlight.js@11.9.0/lib/languages/javascript",
+    "highlight.js/": "https://aistudiocdn.com/highlight.js@^11.11.1/"
+  }
+}
+</script>
+</head>
+<body>
+    <h1>Gemini Code Execution</h1>
+    <div id="app">
+        <div class="card">
+            <h2 class="card-title">Code Input</h2>
+            <div class="card-body">
+                <label for="language-select">Language</label>
+                <select id="language-select">
+                    <option value="python" selected>Python</option>
+                    <option value="javascript">JavaScript</option>
+                </select>
+                <textarea id="code-input" rows="5" aria-label="Code input"></textarea>
+                <button id="execute-btn">Execute Code</button>
+            </div>
+        </div>
+        <div id="results"></div>
+    </div>
+    <script type="module" src="js/main.js"></script>
+</body>
+</html>
