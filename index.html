@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -15,6 +14,9 @@
     "highlight.js/lib/core": "https://esm.sh/highlight.js@11.9.0/lib/core",
     "highlight.js/lib/languages/python": "https://esm.sh/highlight.js@11.9.0/lib/languages/python",
     "highlight.js/lib/languages/javascript": "https://esm.sh/highlight.js@11.9.0/lib/languages/javascript",
+    "highlight.js/lib/languages/dockerfile": "https://esm.sh/highlight.js@11.9.0/lib/languages/dockerfile",
+    "highlight.js/lib/languages/yaml": "https://esm.sh/highlight.js@11.9.0/lib/languages/yaml",
+    "highlight.js/lib/languages/shell": "https://esm.sh/highlight.js@11.9.0/lib/languages/shell",
     "highlight.js/": "https://aistudiocdn.com/highlight.js@^11.11.1/"
   }
 }
@@ -24,15 +26,28 @@
     <h1>Gemini Code Execution</h1>
     <div id="app">
         <div class="card">
-            <h2 class="card-title">Code Input</h2>
+            <div class="card-header">
+                <h2 class="card-title">Code Input</h2>
+            </div>
             <div class="card-body">
                 <label for="language-select">Language</label>
                 <select id="language-select">
                     <option value="python" selected>Python</option>
                     <option value="javascript">JavaScript</option>
+                    <option value="dockerfile">Dockerfile</option>
+                    <option value="yaml">YAML</option>
+                    <option value="shell">Shell Script</option>
                 </select>
-                <textarea id="code-input" rows="5" aria-label="Code input"></textarea>
-                <button id="execute-btn">Execute Code</button>
+                <label class="editor-label">Code</label>
+                <textarea id="code-input" class="code-editor" rows="10" aria-label="Code input"></textarea>
+                <div class="test-input-container" id="test-input-container" style="display: none;">
+                    <label class="editor-label">Unit Tests (optional)</label>
+                    <textarea id="test-input" class="code-editor" rows="5" aria-label="Unit tests input"></textarea>
+                </div>
+                <div class="button-container">
+                    <button id="toggle-tests-btn" class="secondary-btn">Add Tests</button>
+                    <button id="execute-btn">Execute Code</button>
+                </div>
             </div>
         </div>
         <div id="results"></div>

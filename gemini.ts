@@ -22,20 +22,23 @@ export interface GeminiResponse {
   stdout?: string;
   stderr?: string;
   suggestion?: string;
+  testResults?: string;
 }
 
 /**
  * Runs the user's code using the Gemini API and parses the response.
  * @param code The code to execute.
  * @param language The language of the code.
+ * @param tests Optional unit tests to run against the code.
  * @returns A promise that resolves to a structured response.
  */
 export async function runCode(
   code: string,
   language: string,
+  tests?: string,
 ): Promise<GeminiResponse> {
   const model = 'gemini-2.5-flash';
-  const prompt = createCodeExecutionAndReviewPrompt(language, code);
+  const prompt = createCodeExecutionAndReviewPrompt(language, code, tests);
 
   const response = await ai.models.generateContent({
     model,
@@ -66,7 +69,16 @@ export async function runCode(
   }
 
   if (textParts) {
-    // Attempt to extract a code block from the text part for the suggestion.
+    // Extract test results first
+    const testResultsRegex = /### Test Results\s*([\s\S]*?)(?:\n###|\n```|$)/;
+    const testMatch = textParts.match(testResultsRegex);
+    if (testMatch && testMatch[1]) {
+      result.testResults = testMatch[1].trim();
+      // Remove the test results from textParts to avoid confusion
+      textParts = textParts.replace(testResultsRegex, '').trim();
+    }
+
+    // Attempt to extract a code block from the remaining text part for the suggestion.
     const codeBlockRegex = new RegExp(
       '```' + language + '\\n([\\s\\S]*?)\\n```',
     );

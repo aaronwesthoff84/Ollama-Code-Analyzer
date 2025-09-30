@@ -2,12 +2,10 @@
   "compilerOptions": {
     "target": "ES2020",
     "module": "ES2020",
-    "rootDir": "./src",
-    "outDir": "./public/js",
     "strict": true,
     "moduleResolution": "node",
     "esModuleInterop": true,
     "skipLibCheck": true
   },
-  "include": ["src/**/*"]
+  "include": ["*.ts", "*.tsx"]
 }

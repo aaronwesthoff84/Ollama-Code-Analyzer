@@ -31,11 +31,13 @@ function debounce<T extends (...args: any[]) => void>(
  * Handles the end-to-end process of executing code.
  * @param code The code to execute.
  * @param language The language of the code.
+ * @param tests The unit tests to run.
  * @param resultsContainer The container to render results into.
  */
 async function handleCodeExecution(
   code: string,
   language: string,
+  tests: string,
   resultsContainer: HTMLElement,
 ) {
   if (!resultsContainer) return;
@@ -57,12 +59,12 @@ async function handleCodeExecution(
 
   try {
     // 3. Call API
-    const result = await runCode(code, language);
+    const result = await runCode(code, language, tests);
 
     // 4. Clear Spinner
     resultsContainer.innerHTML = '';
 
-    // 5. Render Submitted Code Card
+    // 5. Render Submitted Code & Tests
     const submittedCodeMarkdown = '```' + language + '\n' + code + '\n```';
     renderCard('Submitted Code', submittedCodeMarkdown, resultsContainer, {
       showCopyButton: true,
@@ -70,8 +72,22 @@ async function handleCodeExecution(
       language,
     });
 
+    if (tests.trim()) {
+      const submittedTestsMarkdown = '```' + language + '\n' + tests + '\n```';
+      renderCard('Submitted Tests', submittedTestsMarkdown, resultsContainer, {
+        showCopyButton: true,
+        rawContent: tests,
+        language,
+      });
+    }
+
     // 6. Render Result Cards
     let hasOutput = false;
+    if (result.testResults) {
+      hasOutput = true;
+      renderCard('Test Results', result.testResults, resultsContainer);
+    }
+
     if (result.stderr) {
       hasOutput = true;
       const stderrMarkdown = '```\n' + result.stderr + '\n```';
@@ -125,61 +141,91 @@ async function handleCodeExecution(
  */
 function main() {
   const executeBtn = document.getElementById('execute-btn');
-  const codeInput = document.getElementById(
-    'code-input',
-  ) as HTMLTextAreaElement;
   const resultsContainer = document.getElementById('results');
   const languageSelect = document.getElementById(
     'language-select',
   ) as HTMLSelectElement;
+  const toggleTestsBtn = document.getElementById('toggle-tests-btn');
+  const testInputContainer = document.getElementById('test-input-container');
+  const codeInput = document.getElementById('code-input') as HTMLTextAreaElement;
+  const testInput = document.getElementById('test-input') as HTMLTextAreaElement;
 
   const placeholders: Record<string, string> = {
     python: "print('Hello, Gemini!')",
     javascript: "console.log('Hello, Gemini!');",
+    dockerfile:
+      'FROM python:3.9-slim\nWORKDIR /app\nCOPY . .\nCMD ["python", "app.py"]',
+    yaml: 'apiVersion: v1\nkind: Pod\nmetadata:\n  name: my-pod',
+    shell: 'echo "Hello from a shell script!"',
+  };
+  const testPlaceholders: Record<string, string> = {
+    python: `# Example using standard assert\ndef test_my_function():\n    assert my_function(2) == 4`,
+    javascript: `// Example: Assume a global 'assert' object\nassert.strictEqual(myFunction(2), 4);`,
+    dockerfile: `# Example: check if a specific port is exposed\nRUN grep "EXPOSE 8080" Dockerfile`,
+    yaml: `# Example: check for a required key using a shell command\nyaml_lint my_file.yaml || exit 1`,
+    shell: `# Example: test if a command succeeds\nif my_script.sh --version; then\n  echo "PASS: version command successful"\nelse\n  echo "FAIL: version command failed"\nfi`,
   };
 
-  if (executeBtn && codeInput && resultsContainer && languageSelect) {
+  if (
+    executeBtn &&
+    resultsContainer &&
+    languageSelect &&
+    toggleTestsBtn &&
+    testInputContainer &&
+    codeInput &&
+    testInput
+  ) {
     const handleLanguageChange = () => {
-      codeInput.placeholder = placeholders[languageSelect.value];
+      const selectedLanguage = languageSelect.value;
+      codeInput.placeholder = placeholders[selectedLanguage];
+      testInput.placeholder = testPlaceholders[selectedLanguage];
     };
 
-    // Set initial placeholder
-    handleLanguageChange();
-
-    // Update placeholder on language change
-    languageSelect.addEventListener('change', handleLanguageChange);
-
-    // Auto-detect language on input
     const handleAutoDetect = () => {
       const code = codeInput.value;
-      // Don't run on very short snippets
-      if (code.trim().length < 20) {
-        return;
-      }
-      const result = hljs.highlightAuto(code, ['python', 'javascript']);
-
-      // Only change if a language was confidently detected (relevance > 10)
-      // and it's different from the current selection.
+      if (code.trim().length < 20) return;
+      const result = hljs.highlightAuto(code, [
+        'python',
+        'javascript',
+        'dockerfile',
+        'yaml',
+        'shell',
+      ]);
       if (
         result.language &&
         result.relevance > 10 &&
         languageSelect.value !== result.language
       ) {
         languageSelect.value = result.language;
-        handleLanguageChange(); // Update placeholder
+        handleLanguageChange();
       }
     };
 
-    codeInput.addEventListener('input', debounce(handleAutoDetect, 500));
+    const debouncedAutoDetect = debounce(handleAutoDetect, 500);
+    codeInput.addEventListener('input', debouncedAutoDetect);
+    languageSelect.addEventListener('change', handleLanguageChange);
 
-    // Execute code on button click
-    executeBtn.addEventListener('click', () => {
-      handleCodeExecution(
-        codeInput.value,
-        languageSelect.value,
-        resultsContainer,
-      );
+    toggleTestsBtn.addEventListener('click', () => {
+      const isHidden = testInputContainer.style.display === 'none';
+      if (isHidden) {
+        testInputContainer.style.display = 'block';
+        toggleTestsBtn.textContent = 'Remove Tests';
+      } else {
+        testInputContainer.style.display = 'none';
+        toggleTestsBtn.textContent = 'Add Tests';
+        testInput.value = '';
+      }
     });
+
+    executeBtn.addEventListener('click', () => {
+      const code = codeInput.value;
+      const tests =
+        testInputContainer.style.display === 'none' ? '' : testInput.value;
+      handleCodeExecution(code, languageSelect.value, tests, resultsContainer);
+    });
+
+    // Set initial placeholders
+    handleLanguageChange();
   }
 }
 
