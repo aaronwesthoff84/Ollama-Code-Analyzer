@@ -154,6 +154,8 @@ function main() {
   const codeInput = document.getElementById('code-input') as HTMLTextAreaElement;
   const testInput = document.getElementById('test-input') as HTMLTextAreaElement;
   const formatBtn = document.getElementById('format-btn') as HTMLButtonElement;
+  const saveBtn = document.getElementById('save-btn') as HTMLButtonElement;
+  const loadBtn = document.getElementById('load-btn') as HTMLButtonElement;
 
   const placeholders: Record<string, string> = {
     python: "print('Hello, Gemini!')",
@@ -179,7 +181,9 @@ function main() {
     testInputContainer &&
     codeInput &&
     testInput &&
-    formatBtn
+    formatBtn &&
+    saveBtn &&
+    loadBtn
   ) {
     const handleLanguageChange = () => {
       const selectedLanguage = languageSelect.value;
@@ -250,8 +254,52 @@ function main() {
 
     formatBtn.addEventListener('click', handleCodeFormatting);
 
+    const handleSaveCode = () => {
+      const state = {
+        code: codeInput.value,
+        tests: testInput.value,
+        language: languageSelect.value,
+        testsVisible: testInputContainer.style.display !== 'none',
+      };
+      localStorage.setItem('geminiCodeExecution.savedState', JSON.stringify(state));
+      saveBtn.textContent = 'Saved!';
+      loadBtn.disabled = false; // Enable load button after saving
+      setTimeout(() => {
+        saveBtn.textContent = 'Save Code';
+      }, 2000);
+    };
+
+    const handleLoadCode = () => {
+      const savedStateJSON = localStorage.getItem('geminiCodeExecution.savedState');
+      if (savedStateJSON) {
+        const savedState = JSON.parse(savedStateJSON);
+        codeInput.value = savedState.code || '';
+        testInput.value = savedState.tests || '';
+        languageSelect.value = savedState.language || 'python';
+        handleLanguageChange(); // Update placeholders
+
+        if (savedState.testsVisible) {
+          testInputContainer.style.display = 'block';
+          toggleTestsBtn.textContent = 'Remove Tests';
+        } else {
+          testInputContainer.style.display = 'none';
+          toggleTestsBtn.textContent = 'Add Tests';
+        }
+      } else {
+        alert('No saved code found.');
+      }
+    };
+
+    saveBtn.addEventListener('click', handleSaveCode);
+    loadBtn.addEventListener('click', handleLoadCode);
+
     // Set initial placeholders
     handleLanguageChange();
+
+    // Set initial state for load button
+    if (!localStorage.getItem('geminiCodeExecution.savedState')) {
+      loadBtn.disabled = true;
+    }
   }
 }
 

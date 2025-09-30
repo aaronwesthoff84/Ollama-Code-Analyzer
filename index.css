@@ -176,7 +176,6 @@ textarea.code-editor:focus {
 }
 
 button#execute-btn {
-  flex-grow: 1;
   padding: 0.75rem;
   background-color: #bb86fc;
   color: #121212;
@@ -186,6 +185,7 @@ button#execute-btn {
   font-weight: bold;
   cursor: pointer;
   transition: background-color 0.2s ease;
+  margin-left: auto;
 }
 
 button#execute-btn:hover {
