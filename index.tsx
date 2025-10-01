@@ -9,13 +9,13 @@ import { renderCard, renderSpinner } from './ui';
 import hljs from 'highlight.js/lib/core';
 
 /**
- * Handles the end-to-end process of executing code.
- * @param code The code to execute.
+ * Handles the end-to-end process of analyzing code.
+ * @param code The code to analyze.
  * @param language The language of the code.
  * @param tests The unit tests to run.
  * @param resultsContainer The container to render results into.
  */
-async function handleCodeExecution(
+async function handleCodeReview(
   code: string,
   language: string,
   tests: string,
@@ -53,7 +53,7 @@ async function handleCodeExecution(
       language,
     });
 
-    // 6. Render Code Execution Results
+    // 6. Render Code Analysis Results
     if (tests.trim()) {
       const submittedTestsMarkdown = '```' + language + '\n' + tests + '\n```';
       renderCard('Submitted Tests', submittedTestsMarkdown, resultsContainer, {
@@ -66,13 +66,13 @@ async function handleCodeExecution(
     let hasOutput = false;
     if (result.testResults) {
       hasOutput = true;
-      renderCard('Test Results', result.testResults, resultsContainer);
+      renderCard('Predicted Test Results', result.testResults, resultsContainer);
     }
 
     if (result.stderr) {
       hasOutput = true;
       const stderrMarkdown = '```\n' + result.stderr + '\n```';
-      renderCard('Debug Output', stderrMarkdown, resultsContainer, {
+      renderCard('Predicted Errors', stderrMarkdown, resultsContainer, {
         type: 'error',
         showCopyButton: true,
         rawContent: result.stderr,
@@ -82,7 +82,7 @@ async function handleCodeExecution(
     if (result.stdout) {
       hasOutput = true;
       const stdoutMarkdown = '```\n' + result.stdout + '\n```';
-      renderCard('Execution Result', stdoutMarkdown, resultsContainer, {
+      renderCard('Predicted Output', stdoutMarkdown, resultsContainer, {
         showCopyButton: true,
         rawContent: result.stdout,
       });
@@ -102,7 +102,7 @@ async function handleCodeExecution(
     if (!hasOutput) {
       renderCard(
         'Model Response',
-        'The code executed without producing any output, and no suggestions were provided.',
+        'The code was analyzed without producing any predicted output, and no suggestions were provided.',
         resultsContainer,
       );
     }
@@ -144,9 +144,9 @@ function main() {
   const clearBtn = document.getElementById('clear-btn') as HTMLButtonElement;
 
   const placeholders: Record<string, string> = {
-    python: "def greet(name):\n    print( f\"Hello, {name}!\" )\n\ngreet( 'Gemini' )",
+    python: "def greet(name):\n    print( f\"Hello, {name}!\" )\n\ngreet( 'Ollama' )",
     javascript:
-      "function greet(name) {\n  console.log( 'Hello, ' + name + '!' );\n}\ngreet('Gemini');",
+      "function greet(name) {\n  console.log( 'Hello, ' + name + '!' );\n}\ngreet('Ollama');",
     kotlin: 'fun main() {\n println("Hello from Kotlin!")\n}',
     gradle: `plugins {\nid 'java' \n}\n\nrepositories {\n    mavenCentral()\n}\n\ndependencies {\n    testImplementation 'org.junit.jupiter:junit-jupiter:5.8.1'\n}`,
     dockerfile:
@@ -199,8 +199,8 @@ class MyTests {
         testInput.value = testPlaceholders[selectedLanguage] || '';
       }
 
-      // All languages now support tests and code execution
-      executeBtn.textContent = 'Execute Code';
+      // All languages now support tests and code analysis
+      executeBtn.textContent = 'Analyze Code';
       toggleTestsBtn.style.display = 'inline-block';
       if (toggleTestsBtn.textContent === 'Remove Tests') {
         testInputContainer.style.display = 'block';
@@ -228,7 +228,7 @@ class MyTests {
       const code = codeInput.value;
       const tests =
         testInputContainer.style.display === 'none' ? '' : testInput.value;
-      handleCodeExecution(code, languageSelect.value, tests, resultsContainer);
+      handleCodeReview(code, languageSelect.value, tests, resultsContainer);
     });
 
     const handleCodeFormatting = async () => {
@@ -259,7 +259,7 @@ class MyTests {
         testsVisible: testInputContainer.style.display !== 'none',
       };
       localStorage.setItem(
-        'geminiCodeExecution.savedState',
+        'ollamaCodeAnalysis.savedState',
         JSON.stringify(state),
       );
       saveBtn.textContent = 'Saved!';
@@ -271,7 +271,7 @@ class MyTests {
 
     const handleLoadCode = () => {
       const savedStateJSON = localStorage.getItem(
-        'geminiCodeExecution.savedState',
+        'ollamaCodeAnalysis.savedState',
       );
       if (savedStateJSON) {
         const savedState = JSON.parse(savedStateJSON);
@@ -304,11 +304,6 @@ class MyTests {
 
     // Set initial placeholders and UI state
     handleLanguageChange();
-
-    // Set initial state for load button
-    if (!localStorage.getItem('geminiCodeExecution.savedState')) {
-      loadBtn.disabled = true;
-    }
   }
 }
 

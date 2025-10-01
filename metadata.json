@@ -1,5 +1,5 @@
 {
-  "name": "Code execution",
-  "description": "WORKING APP IN AI STUDIO - A web application to validate code in certain syntax\n",
+  "name": "Ollama Code Analyzer",
+  "description": "WORKING APP IN AI STUDIO - A web application to validate code in certain syntax with Ollama",
   "requestFramePermissions": []
 }
