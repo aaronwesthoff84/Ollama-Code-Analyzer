@@ -8,16 +8,42 @@ import { marked } from 'marked';
 import hljs from 'highlight.js/lib/core';
 import python from 'highlight.js/lib/languages/python';
 import javascript from 'highlight.js/lib/languages/javascript';
+import dockerfile from 'highlight.js/lib/languages/dockerfile';
+import yaml from 'highlight.js/lib/languages/yaml';
+import shell from 'highlight.js/lib/languages/shell';
+import kotlin from 'highlight.js/lib/languages/kotlin';
+import groovy from 'highlight.js/lib/languages/groovy';
 
 // Setup syntax highlighting
 hljs.registerLanguage('python', python);
 hljs.registerLanguage('javascript', javascript);
+hljs.registerLanguage('dockerfile', dockerfile);
+hljs.registerLanguage('yaml', yaml);
+hljs.registerLanguage('shell', shell);
+hljs.registerLanguage('kotlin', kotlin);
+hljs.registerLanguage('gradle', groovy); // Use Groovy for Gradle
 
 const renderer = new marked.Renderer();
+// Custom renderer for code blocks to handle syntax highlighting.
 renderer.code = ({ text: code, lang }) => {
-  const language = hljs.getLanguage(lang || '') ? lang || '' : 'plaintext';
-  const highlightedCode = hljs.highlight(code, { language }).value;
-  return `<pre><code class="hljs language-${language}">${highlightedCode}</code></pre>`;
+  const language = lang || '';
+  // If a language is specified and supported by highlight.js, apply highlighting.
+  if (language && hljs.getLanguage(language)) {
+    const highlightedCode = hljs.highlight(code, {
+      language,
+      ignoreIllegals: true,
+    }).value;
+    return `<pre><code class="hljs language-${language}">${highlightedCode}</code></pre>`;
+  }
+  // For plaintext or unknown languages, just render as plain text within pre/code tags
+  // without applying syntax highlighting. Manually escape HTML entities.
+  const escapedCode = code
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+  return `<pre><code>${escapedCode}</code></pre>`;
 };
 
 marked.setOptions({
@@ -91,7 +117,16 @@ export function renderCard(
 
   const cardBody = document.createElement('div');
   cardBody.className = 'card-body';
-  cardBody.innerHTML = marked.parse(content) as string;
+  let htmlContent = marked.parse(content) as string;
+
+  // Add special formatting for test results
+  if (title === 'Test Results') {
+    htmlContent = htmlContent
+      .replace(/<p>PASS:/g, '<p class="test-pass">✅ PASS:')
+      .replace(/<p>FAIL:/g, '<p class="test-fail">❌ FAIL:');
+  }
+
+  cardBody.innerHTML = htmlContent;
   card.appendChild(cardBody);
 
   container.appendChild(card);
