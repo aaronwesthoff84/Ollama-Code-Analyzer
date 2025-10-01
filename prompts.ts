@@ -18,10 +18,11 @@ export function createCodeFormattingPrompt(
     {
       python: 'PEP 8',
       javascript: 'Prettier',
+      kotlin: 'Kotlin official style guide',
+      gradle: 'standard Gradle conventions',
       dockerfile: 'standard best practices',
       yaml: 'standard YAML style',
       shell: 'Google Shell Style Guide',
-      markdown: 'Prettier with consistent formatting',
     }[language] || 'standard style conventions';
 
   return `
@@ -51,22 +52,6 @@ export function createCodeExecutionAndReviewPrompt(
   code: string,
   tests?: string,
 ): string {
-  if (language === 'markdown') {
-    return `
-Review the following Markdown document.
-
-**Instructions:**
-1.  **Analyze the content:** Check for clarity, grammar, and spelling errors.
-2.  **Review formatting:** Check for consistent and correct Markdown syntax (e.g., headings, lists, links, code blocks).
-3.  **Provide feedback and suggestions:** Summarize your findings and provide a revised version of the document inside a single markdown code block that incorporates your suggestions. If no changes are needed, state that the document looks good.
-
-**Markdown to Review:**
-\`\`\`markdown
-${code}
-\`\`\`
-`;
-  }
-
   let prompt = `
 Analyze and execute the following ${language} code.
 

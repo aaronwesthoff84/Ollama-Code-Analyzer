@@ -82,20 +82,6 @@ export async function runCode(
   const model = 'gemini-2.5-flash';
   const prompt = createCodeExecutionAndReviewPrompt(language, code, tests);
 
-  if (language === 'markdown') {
-    const response = await ai.models.generateContent({
-      model,
-      contents: prompt,
-    });
-    const text = response.text;
-    const codeBlockRegex = /```markdown\n([\s\S]*?)\n```/;
-    const match = text.match(codeBlockRegex);
-    if (match && match[1]) {
-      return { suggestion: match[1].trim() };
-    }
-    return { suggestion: text.trim() };
-  }
-
   const response = await ai.models.generateContent({
     model,
     contents: prompt,

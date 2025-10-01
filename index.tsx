@@ -66,41 +66,13 @@ async function handleCodeExecution(
 
     // 5. Render Submitted Content
     const submittedContentMarkdown = '```' + language + '\n' + code + '\n```';
-    renderCard(
-      `Submitted ${language === 'markdown' ? 'Markdown' : 'Code'}`,
-      submittedContentMarkdown,
-      resultsContainer,
-      {
-        showCopyButton: true,
-        rawContent: code,
-        language,
-      },
-    );
+    renderCard('Submitted Code', submittedContentMarkdown, resultsContainer, {
+      showCopyButton: true,
+      rawContent: code,
+      language,
+    });
 
-    // 6. Handle Markdown Review
-    if (language === 'markdown') {
-      if (result.suggestion) {
-        renderCard(
-          'Review & Suggestions',
-          '```markdown\n' + result.suggestion + '\n```',
-          resultsContainer,
-          {
-            showCopyButton: true,
-            rawContent: result.suggestion,
-            language: 'markdown',
-          },
-        );
-      } else {
-        renderCard(
-          'Model Response',
-          'The model did not provide any suggestions.',
-          resultsContainer,
-        );
-      }
-      return; // End here for markdown
-    }
-
-    // 7. Render Code Execution Results
+    // 6. Render Code Execution Results
     if (tests.trim()) {
       const submittedTestsMarkdown = '```' + language + '\n' + tests + '\n```';
       renderCard('Submitted Tests', submittedTestsMarkdown, resultsContainer, {
@@ -179,28 +151,35 @@ function main() {
     'toggle-tests-btn',
   ) as HTMLButtonElement;
   const testInputContainer = document.getElementById('test-input-container');
-  const codeInput = document.getElementById('code-input') as HTMLTextAreaElement;
-  const testInput = document.getElementById('test-input') as HTMLTextAreaElement;
+  const codeInput = document.getElementById(
+    'code-input',
+  ) as HTMLTextAreaElement;
+  const testInput = document.getElementById(
+    'test-input',
+  ) as HTMLTextAreaElement;
   const formatBtn = document.getElementById('format-btn') as HTMLButtonElement;
   const saveBtn = document.getElementById('save-btn') as HTMLButtonElement;
   const loadBtn = document.getElementById('load-btn') as HTMLButtonElement;
+  const clearBtn = document.getElementById('clear-btn') as HTMLButtonElement;
 
   const placeholders: Record<string, string> = {
     python: "print('Hello, Gemini!')",
     javascript: "console.log('Hello, Gemini!');",
+    kotlin: 'fun main() {\n    println("Hello from Kotlin!")\n}',
+    gradle: `plugins {\n    id 'java'\n}\n\nrepositories {\n    mavenCentral()\n}\n\ndependencies {\n    testImplementation 'org.junit.jupiter:junit-jupiter:5.8.1'\n}`,
     dockerfile:
       'FROM python:3.9-slim\nWORKDIR /app\nCOPY . .\nCMD ["python", "app.py"]',
     yaml: 'apiVersion: v1\nkind: Pod\nmetadata:\n  name: my-pod',
     shell: 'echo "Hello from a shell script!"',
-    markdown: '# My Document\n\nStart writing your markdown here.',
   };
   const testPlaceholders: Record<string, string> = {
     python: `# Example using standard assert\ndef test_my_function():\n    assert my_function(2) == 4`,
     javascript: `// Example: Assume a global 'assert' object\nassert.strictEqual(myFunction(2), 4);`,
+    kotlin: `import org.junit.jupiter.api.Test\nimport org.junit.jupiter.api.Assertions.assertEquals\n\n// Assume a function 'fun double(x: Int): Int = x * 2' exists\nclass MyTests {\n    @Test\n    fun testDouble() {\n        assertEquals(4, double(2))\n    }\n}`,
+    gradle: `// Example: test if a task exists\nif (tasks.findByName('build')) {\n    println "PASS: 'build' task exists"\n} else {\n    println "FAIL: 'build' task does not exist"\n}`,
     dockerfile: `# Example: check if a specific port is exposed\nRUN grep "EXPOSE 8080" Dockerfile`,
     yaml: `# Example: check for a required key using a shell command\nyaml_lint my_file.yaml || exit 1`,
     shell: `# Example: test if a command succeeds\nif my_script.sh --version; then\n  echo "PASS: version command successful"\nelse\n  echo "FAIL: version command failed"\nfi`,
-    markdown: '',
   };
 
   if (
@@ -213,24 +192,19 @@ function main() {
     testInput &&
     formatBtn &&
     saveBtn &&
-    loadBtn
+    loadBtn &&
+    clearBtn
   ) {
     const handleLanguageChange = () => {
       const selectedLanguage = languageSelect.value;
       codeInput.placeholder = placeholders[selectedLanguage];
       testInput.placeholder = testPlaceholders[selectedLanguage];
 
-      if (selectedLanguage === 'markdown') {
-        executeBtn.textContent = 'Review Markdown';
-        toggleTestsBtn.style.display = 'none';
-        testInputContainer.style.display = 'none';
-        testInput.value = '';
-      } else {
-        executeBtn.textContent = 'Execute Code';
-        toggleTestsBtn.style.display = 'inline-block';
-        if (toggleTestsBtn.textContent === 'Remove Tests') {
-          testInputContainer.style.display = 'block';
-        }
+      // All languages now support tests and code execution
+      executeBtn.textContent = 'Execute Code';
+      toggleTestsBtn.style.display = 'inline-block';
+      if (toggleTestsBtn.textContent === 'Remove Tests') {
+        testInputContainer.style.display = 'block';
       }
     };
 
@@ -240,10 +214,11 @@ function main() {
       const result = hljs.highlightAuto(code, [
         'python',
         'javascript',
+        'kotlin',
+        'gradle',
         'dockerfile',
         'yaml',
         'shell',
-        'markdown',
       ]);
       if (
         result.language &&
@@ -305,7 +280,10 @@ function main() {
         language: languageSelect.value,
         testsVisible: testInputContainer.style.display !== 'none',
       };
-      localStorage.setItem('geminiCodeExecution.savedState', JSON.stringify(state));
+      localStorage.setItem(
+        'geminiCodeExecution.savedState',
+        JSON.stringify(state),
+      );
       saveBtn.textContent = 'Saved!';
       loadBtn.disabled = false; // Enable load button after saving
       setTimeout(() => {
@@ -314,14 +292,16 @@ function main() {
     };
 
     const handleLoadCode = () => {
-      const savedStateJSON = localStorage.getItem('geminiCodeExecution.savedState');
+      const savedStateJSON = localStorage.getItem(
+        'geminiCodeExecution.savedState',
+      );
       if (savedStateJSON) {
         const savedState = JSON.parse(savedStateJSON);
         codeInput.value = savedState.code || '';
         testInput.value = savedState.tests || '';
         languageSelect.value = savedState.language || 'python';
 
-        if (savedState.testsVisible && savedState.language !== 'markdown') {
+        if (savedState.testsVisible) {
           testInputContainer.style.display = 'block';
           toggleTestsBtn.textContent = 'Remove Tests';
         } else {
@@ -334,8 +314,15 @@ function main() {
       }
     };
 
+    const handleClearCode = () => {
+      codeInput.value = '';
+      testInput.value = '';
+      resultsContainer.innerHTML = '';
+    };
+
     saveBtn.addEventListener('click', handleSaveCode);
     loadBtn.addEventListener('click', handleLoadCode);
+    clearBtn.addEventListener('click', handleClearCode);
 
     // Set initial placeholders and UI state
     handleLanguageChange();
