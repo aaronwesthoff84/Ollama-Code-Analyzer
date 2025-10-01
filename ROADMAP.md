@@ -4,4 +4,4 @@ This document outlines the planned features and improvements for the Gemini Code
 
 ## Planned Features
 
-Nothing planned
+- Improve responsive design for a wider range of devices.

@@ -25,45 +25,47 @@
 </script>
 </head>
 <body>
-    <h1>Gemini Code Execution</h1>
-    <div id="app">
-        <div class="card">
-            <div class="card-header">
-                <h2 class="card-title">Code Input</h2>
-            </div>
-            <div class="card-body">
-                <label for="language-select">Language</label>
-                <select id="language-select">
-                    <option value="python" selected>Python</option>
-                    <option value="javascript">JavaScript</option>
-                    <option value="kotlin">Kotlin</option>
-                    <option value="gradle">Gradle</option>
-                    <option value="dockerfile">Dockerfile</option>
-                    <option value="yaml">YAML</option>
-                    <option value="shell">Shell Script</option>
-                </select>
-                <div class="editor-header">
-                    <label for="code-input" class="editor-label">Code</label>
+    <main class="main-container">
+        <h1>Gemini Code Execution</h1>
+        <div id="app">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Code Input</h2>
                 </div>
-                <textarea id="code-input" class="code-editor" rows="10" aria-label="Code input"></textarea>
-                <div class="test-input-container" id="test-input-container" style="display: none;">
+                <div class="card-body">
+                    <label for="language-select">Language</label>
+                    <select id="language-select">
+                        <option value="python" selected>Python</option>
+                        <option value="javascript">JavaScript</option>
+                        <option value="kotlin">Kotlin</option>
+                        <option value="gradle">Gradle</option>
+                        <option value="dockerfile">Dockerfile</option>
+                        <option value="yaml">YAML</option>
+                        <option value="shell">Shell Script</option>
+                    </select>
                     <div class="editor-header">
-                        <label for="test-input" class="editor-label">Unit Tests (optional)</label>
+                        <label for="code-input" class="editor-label">Code</label>
                     </div>
-                    <textarea id="test-input" class="code-editor" rows="5" aria-label="Unit tests input"></textarea>
-                </div>
-                <div class="button-container">
-                    <button id="save-btn" class="secondary-btn">Save Code</button>
-                    <button id="load-btn" class="secondary-btn">Load Code</button>
-                    <button id="clear-btn" class="secondary-btn">Clear</button>
-                    <button id="format-btn" class="secondary-btn">Format Code</button>
-                    <button id="toggle-tests-btn" class="secondary-btn">Add Tests</button>
-                    <button id="execute-btn">Execute Code</button>
+                    <textarea id="code-input" class="code-editor" rows="10" aria-label="Code input"></textarea>
+                    <div class="test-input-container" id="test-input-container" style="display: none;">
+                        <div class="editor-header">
+                            <label for="test-input" class="editor-label">Unit Tests (optional)</label>
+                        </div>
+                        <textarea id="test-input" class="code-editor" rows="5" aria-label="Unit tests input"></textarea>
+                    </div>
+                    <div class="button-container">
+                        <button id="save-btn" class="secondary-btn">Save Code</button>
+                        <button id="load-btn" class="secondary-btn">Load Code</button>
+                        <button id="clear-btn" class="secondary-btn">Clear</button>
+                        <button id="format-btn" class="secondary-btn">Format Code</button>
+                        <button id="toggle-tests-btn" class="secondary-btn">Add Tests</button>
+                        <button id="execute-btn">Execute Code</button>
+                    </div>
                 </div>
             </div>
         </div>
         <div id="results"></div>
-    </div>
+    </main>
     <script type="module" src="index.tsx"></script>
 </body>
 </html>
