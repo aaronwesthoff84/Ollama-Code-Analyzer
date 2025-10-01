@@ -4,4 +4,4 @@ This document outlines the planned features and improvements for the Gemini Code
 
 ## Planned Features
 
-- Ability to upload define models in the UI
+- Improve responsive design for a wider range of devices.

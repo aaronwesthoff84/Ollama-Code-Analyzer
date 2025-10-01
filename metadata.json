@@ -1,5 +1,5 @@
 {
-  "name": "Ollama Code Analyzer",
-  "description": "WORKING APP IN AI STUDIO - A web application to validate code in certain syntax with Ollama",
+  "name": "Code-Execution-and-Review-with-Gemini Public",
+  "description": "WORKING APP IN AI STUDIO - A web application to validate code in certain syntax\n",
   "requestFramePermissions": []
 }
