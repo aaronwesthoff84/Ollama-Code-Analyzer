@@ -161,6 +161,12 @@ function main() {
   const saveBtn = document.getElementById('save-btn') as HTMLButtonElement;
   const loadBtn = document.getElementById('load-btn') as HTMLButtonElement;
   const clearBtn = document.getElementById('clear-btn') as HTMLButtonElement;
+  const useSampleBtn = document.getElementById(
+    'use-sample-btn',
+  ) as HTMLButtonElement;
+  const useSampleTestBtn = document.getElementById(
+    'use-sample-test-btn',
+  ) as HTMLButtonElement;
 
   const placeholders: Record<string, string> = {
     python: "print('Hello, Gemini!')",
@@ -193,7 +199,9 @@ function main() {
     formatBtn &&
     saveBtn &&
     loadBtn &&
-    clearBtn
+    clearBtn &&
+    useSampleBtn &&
+    useSampleTestBtn
   ) {
     const handleLanguageChange = () => {
       const selectedLanguage = languageSelect.value;
@@ -323,6 +331,20 @@ function main() {
     saveBtn.addEventListener('click', handleSaveCode);
     loadBtn.addEventListener('click', handleLoadCode);
     clearBtn.addEventListener('click', handleClearCode);
+
+    useSampleBtn.addEventListener('click', () => {
+      const selectedLanguage = languageSelect.value;
+      if (placeholders[selectedLanguage]) {
+        codeInput.value = placeholders[selectedLanguage];
+      }
+    });
+
+    useSampleTestBtn.addEventListener('click', () => {
+      const selectedLanguage = languageSelect.value;
+      if (testPlaceholders[selectedLanguage]) {
+        testInput.value = testPlaceholders[selectedLanguage];
+      }
+    });
 
     // Set initial placeholders and UI state
     handleLanguageChange();
