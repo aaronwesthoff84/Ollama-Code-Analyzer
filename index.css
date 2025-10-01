@@ -236,7 +236,7 @@ button.secondary-btn:disabled {
 
 @keyframes spin {
   to {
-    transform: rotate(360deg);
+    transform: rotate(306deg);
   }
 }
 
@@ -275,4 +275,24 @@ li > code {
 .card-body .test-fail {
   color: #e57373;
   font-weight: 500;
+}
+
+/* Responsive adjustments for smaller screens */
+@media (max-width: 768px) {
+  body {
+    padding: 1rem;
+  }
+
+  .button-container {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    justify-content: center; /* Center the buttons */
+  }
+
+  button#execute-btn {
+    width: 100%;
+    margin-left: 0;
+    margin-top: 0.5rem;
+    order: 1; /* Move it to the end of the visual order */
+  }
 }
