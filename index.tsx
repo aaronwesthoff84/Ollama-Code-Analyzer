@@ -9,25 +9,6 @@ import { renderCard, renderSpinner } from './ui';
 import hljs from 'highlight.js/lib/core';
 
 /**
- * Simple debounce function.
- * @param func The function to debounce.
- * @param delay The delay in milliseconds.
- * @returns A debounced function.
- */
-function debounce<T extends (...args: any[]) => void>(
-  func: T,
-  delay: number,
-): (...args: Parameters<T>) => void {
-  let timeoutId: number | undefined;
-  return function (...args: Parameters<T>) {
-    clearTimeout(timeoutId);
-    timeoutId = window.setTimeout(() => {
-      func(...args);
-    }, delay);
-  };
-}
-
-/**
  * Handles the end-to-end process of executing code.
  * @param code The code to execute.
  * @param language The language of the code.
@@ -161,30 +142,38 @@ function main() {
   const saveBtn = document.getElementById('save-btn') as HTMLButtonElement;
   const loadBtn = document.getElementById('load-btn') as HTMLButtonElement;
   const clearBtn = document.getElementById('clear-btn') as HTMLButtonElement;
-  const useSampleBtn = document.getElementById(
-    'use-sample-btn',
-  ) as HTMLButtonElement;
-  const useSampleTestBtn = document.getElementById(
-    'use-sample-test-btn',
-  ) as HTMLButtonElement;
 
   const placeholders: Record<string, string> = {
-    python: "print('Hello, Gemini!')",
-    javascript: "console.log('Hello, Gemini!');",
-    kotlin: 'fun main() {\n    println("Hello from Kotlin!")\n}',
-    gradle: `plugins {\n    id 'java'\n}\n\nrepositories {\n    mavenCentral()\n}\n\ndependencies {\n    testImplementation 'org.junit.jupiter:junit-jupiter:5.8.1'\n}`,
+    python: "def greet(name):\n    print( f\"Hello, {name}!\" )\n\ngreet( 'Gemini' )",
+    javascript:
+      "function greet(name) {\n  console.log( 'Hello, ' + name + '!' );\n}\ngreet('Gemini');",
+    kotlin: 'fun main() {\n println("Hello from Kotlin!")\n}',
+    gradle: `plugins {\nid 'java' \n}\n\nrepositories {\n    mavenCentral()\n}\n\ndependencies {\n    testImplementation 'org.junit.jupiter:junit-jupiter:5.8.1'\n}`,
     dockerfile:
-      'FROM python:3.9-slim\nWORKDIR /app\nCOPY . .\nCMD ["python", "app.py"]',
-    yaml: 'apiVersion: v1\nkind: Pod\nmetadata:\n  name: my-pod',
-    shell: 'echo "Hello from a shell script!"',
+      'FROM python:3.9-slim\nWORKDIR /app\n COPY . .\nCMD ["python", "app.py"]',
+    yaml: 'apiVersion: v1\nkind: Pod\nmetadata:\n name: my-pod',
+    shell: 'echo    "Hello from a shell script!"',
   };
   const testPlaceholders: Record<string, string> = {
-    python: `# Example using standard assert\ndef test_my_function():\n    assert my_function(2) == 4`,
-    javascript: `// Example: Assume a global 'assert' object\nassert.strictEqual(myFunction(2), 4);`,
-    kotlin: `import org.junit.jupiter.api.Test\nimport org.junit.jupiter.api.Assertions.assertEquals\n\n// Assume a function 'fun double(x: Int): Int = x * 2' exists\nclass MyTests {\n    @Test\n    fun testDouble() {\n        assertEquals(4, double(2))\n    }\n}`,
+    python: `def my_function(x):
+  return x * 2
+
+def test_my_function():
+ assert my_function(2) == 4`,
+    javascript: `// Example: Assume a global 'assert' object\nfunction myFunction(x){return x*2;}\nassert.strictEqual(myFunction(2), 4);`,
+    kotlin: `import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.Assertions.assertEquals
+
+// Assume a function 'fun double(x: Int): Int = x * 2' exists
+class MyTests {
+    @Test
+    fun testDouble() {
+        assertEquals(4, double(2))
+    }
+}`,
     gradle: `// Example: test if a task exists\nif (tasks.findByName('build')) {\n    println "PASS: 'build' task exists"\n} else {\n    println "FAIL: 'build' task does not exist"\n}`,
-    dockerfile: `# Example: check if a specific port is exposed\nRUN grep "EXPOSE 8080" Dockerfile`,
-    yaml: `# Example: check for a required key using a shell command\nyaml_lint my_file.yaml || exit 1`,
+    dockerfile: `# Example: check if a specific port is exposed\nRUN grep     "EXPOSE 8080" Dockerfile`,
+    yaml: `# Example: check for a required key using a shell command\n yamllint my_file.yaml || exit 1`,
     shell: `# Example: test if a command succeeds\nif my_script.sh --version; then\n  echo "PASS: version command successful"\nelse\n  echo "FAIL: version command failed"\nfi`,
   };
 
@@ -199,14 +188,16 @@ function main() {
     formatBtn &&
     saveBtn &&
     loadBtn &&
-    clearBtn &&
-    useSampleBtn &&
-    useSampleTestBtn
+    clearBtn
   ) {
     const handleLanguageChange = () => {
       const selectedLanguage = languageSelect.value;
-      codeInput.placeholder = placeholders[selectedLanguage];
-      testInput.placeholder = testPlaceholders[selectedLanguage];
+      codeInput.value = placeholders[selectedLanguage] || '';
+
+      // If the test container is visible, update the tests to match the new language.
+      if (testInputContainer.style.display !== 'none') {
+        testInput.value = testPlaceholders[selectedLanguage] || '';
+      }
 
       // All languages now support tests and code execution
       executeBtn.textContent = 'Execute Code';
@@ -216,30 +207,6 @@ function main() {
       }
     };
 
-    const handleAutoDetect = () => {
-      const code = codeInput.value;
-      if (code.trim().length < 20) return;
-      const result = hljs.highlightAuto(code, [
-        'python',
-        'javascript',
-        'kotlin',
-        'gradle',
-        'dockerfile',
-        'yaml',
-        'shell',
-      ]);
-      if (
-        result.language &&
-        result.relevance > 10 &&
-        languageSelect.value !== result.language
-      ) {
-        languageSelect.value = result.language;
-        handleLanguageChange();
-      }
-    };
-
-    const debouncedAutoDetect = debounce(handleAutoDetect, 500);
-    codeInput.addEventListener('input', debouncedAutoDetect);
     languageSelect.addEventListener('change', handleLanguageChange);
 
     toggleTestsBtn.addEventListener('click', () => {
@@ -247,6 +214,9 @@ function main() {
       if (isHidden) {
         testInputContainer.style.display = 'block';
         toggleTestsBtn.textContent = 'Remove Tests';
+        // Populate with sample tests for the current language when tests are added.
+        const selectedLanguage = languageSelect.value;
+        testInput.value = testPlaceholders[selectedLanguage] || '';
       } else {
         testInputContainer.style.display = 'none';
         toggleTestsBtn.textContent = 'Add Tests';
@@ -316,7 +286,7 @@ function main() {
           testInputContainer.style.display = 'none';
           toggleTestsBtn.textContent = 'Add Tests';
         }
-        handleLanguageChange(); // Update UI based on loaded language
+        // Don't call handleLanguageChange here to preserve loaded content
       } else {
         alert('No saved code found.');
       }
@@ -331,20 +301,6 @@ function main() {
     saveBtn.addEventListener('click', handleSaveCode);
     loadBtn.addEventListener('click', handleLoadCode);
     clearBtn.addEventListener('click', handleClearCode);
-
-    useSampleBtn.addEventListener('click', () => {
-      const selectedLanguage = languageSelect.value;
-      if (placeholders[selectedLanguage]) {
-        codeInput.value = placeholders[selectedLanguage];
-      }
-    });
-
-    useSampleTestBtn.addEventListener('click', () => {
-      const selectedLanguage = languageSelect.value;
-      if (testPlaceholders[selectedLanguage]) {
-        testInput.value = testPlaceholders[selectedLanguage];
-      }
-    });
 
     // Set initial placeholders and UI state
     handleLanguageChange();
